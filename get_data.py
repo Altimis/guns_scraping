@@ -10,6 +10,8 @@ from datetime import datetime
 import json
 import config
 
+from datetime import datetime as dt
+
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(message)s')
 
@@ -25,9 +27,11 @@ user_agent = config.user_agent
 api_label_1 = config.api_label_1
 api_label_2 = config.api_label_2
 token = config.token
-url = config.url
+api_url = config.url
 username = config.username
 password = config.password
+
+now = dt.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 ## create a class to use to initiate object
 class api_wrapprer:
@@ -85,7 +89,7 @@ class api_wrapprer:
                 }
                 print("current page : ", i)
                 # get the response
-                response = requests.get(url, auth=(username, password), params=params)
+                response = requests.get(api_url, auth=(username, password), params=params)
                 # retrieve data from the response json
                 if int(response.status_code) == 200:
                     logging.info("Success response")
@@ -120,9 +124,9 @@ class api_wrapprer:
                     i += 1
                     print("items pulled : ", len(to_return))
                     df = pd.DataFrame.from_dict(to_return)
-                    df.to_csv("data/results_csv.csv", index=False)
+                    df.to_csv(f"data/results_{now}.csv", index=False)
                
-                    with open("data/results_json.json", "w") as final:
+                    with open(f"data/results_{now}.json", "w") as final:
                         json.dump(to_return, final, indent= 4)
                 else:
                     print(f'Error getting data'+str(response.json()))
