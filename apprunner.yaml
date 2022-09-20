@@ -4,13 +4,10 @@ build:
   commands:
     pre-build:
       - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-      - dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
+      - dpkg -i google-chrome-stable_current_amd64.deb
+      - apt-get -fy install
     build:
-      - pip install pipenv
-      - pipenv install
-  env:
-    - name: APP_HOME
-      value: "/guns_scraping_aws"
+      - pip install -r requirements.txt
 run:
   runtime-version: 3.7
   command: python get_data.py

@@ -1,13 +1,14 @@
 import logging
 import boto3
 from botocore.exceptions import ClientError
-
+from flask import Flask
 import re
 import pandas as pd
 import os
 import numpy as np
 import math
-
+from waitress import serve
+import chromedriver_autoinstaller
 import config
 import undetected_chromedriver as uc
 from selenium import webdriver
@@ -16,7 +17,7 @@ from selenium.common.exceptions import TimeoutException
 import random
 import logging
 import traceback
-
+import selenium
 from time import sleep
 
 import itertools
@@ -45,7 +46,7 @@ username = config.username
 password = config.password
 
 # call s3 bucket
-s3 = boto3.resource('s3')
+s3 = boto3.resource('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
 bucket = s3.Bucket(config.BUCKET_NAME)
 
 
@@ -93,7 +94,7 @@ class Scraper:
 
     # main function that sends data to the cloud via API
     def get_items(self):
-        s3 = boto3.client('s3')
+        s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
 
         # read the file
 
@@ -538,13 +539,35 @@ class Scraper:
         initiate the undetected chrome driver
         """
         # intitate the driver instance with options and chrome version
-        worked = False
-        attempt = 1
-        while not worked and attempt < 4:
+        options = uc.ChromeOptions()
+        try:  # will patch to newest Chrome driver version
+            driver = uc.Chrome(options=options)
+        except selenium.common.exceptions.WebDriverException as e:  # newest driver version not matching Chrome version
+            del options  # destroy thread-bound ChromeOptions object
+            # parse current Chrome version from exception message
+            print('Got WebDriverException:', e.msg)
+            cversion_regex = re.compile(r'Current browser version is \d+')
+            current_chrome_version_part = cversion_regex.search(e.msg)
+            cversion_str = e.msg[current_chrome_version_part.span()[0]: current_chrome_version_part.span()[1]]
+            cversion = int(cversion_str.split()[-1])
+
+            # setup options and Chrome session again with fallback version
+            print('Fallback driver to older Chrome version:', cversion)
+            options = uc.ChromeOptions()
+            options.add_argument('--no-first-run --no-service-autorun')
+            options.add_argument('--headless')
+            # options.add_argument(f'--proxy={proxy}')
+            driver = uc.Chrome(options=options, version_main=cversion)
+        #worked = False
+        #attempt = 1
+        #while not worked and attempt < 4:
             # self.log_to_file(f"initiating the driver attempt {attempt} ...")
+
+            """
             try:
+                chromedriver_path = chromedriver_autoinstaller.install()
                 options = uc.ChromeOptions()
-                options.binary_location = '/tmp/headless-chromium'
+                #options.binary_location = '/tmp/headless-chromium'
                 options.add_argument('--headless')
                 options.add_argument('--no-sandbox')
                 options.add_argument('--single-process')
@@ -572,14 +595,14 @@ class Scraper:
                 driver = uc.Chrome(driver_executable_path='/tmp/chromedriver', options=options)
                 worked = False
             attempt += 1
-
-        return None
+            """
+        return driver
 
     def load_ucps(self, ucp_csv_path):
         """
         yield each value of upcs and prices from saved API data (generator)
         """
-        s3 = boto3.client('s3')
+        s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
         s3.download_file(config.BUCKET_NAME, 'data/' + ucp_csv_path.split('/')[-1], ucp_csv_path)
         df = pd.read_csv(ucp_csv_path)
         upcs = df.upc.values.tolist()
@@ -619,14 +642,14 @@ class Scraper:
             self.log_to_file("Scraping 3 websites started")
             # self.scrape_gundeals(ucp = upc)
             try:
-                t1 = Thread(target=self.scrape_gundeals, args=(upc,))
-                t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
+                #t1 = Thread(target=self.scrape_gundeals, args=(upc,))
+                #t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
                 t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
-                t1.start()
-                t2.start()
+                #t1.start()
+                #t2.start()
                 t3.start()
-                t1.join()
-                t2.join()
+                #t1.join()
+                #t2.join()
                 t3.join()
                 # self.scrape_barcodelookup(upc)
 
@@ -710,6 +733,8 @@ class Scraper:
 
             bucket.upload_file("/tmp/logs.txt", "data/logs.txt")
 
+            return upcs_products
+
     def remove_duplicates(self, ucp, upcs_products):
         if len(upcs_products) > 0:
             new_lst = [t for t in tuple((set(tuple(i) for i in upcs_products)))]
@@ -722,29 +747,27 @@ class Scraper:
         return new_lst
 
 
-def lambda_handler():
+app = Flask(__name__)
+
+@app.route("/")
+def main():
     warnings.filterwarnings("ignore")
     # logging.basicConfig(level=self.log_to_file)
 
     open("/tmp/logs.txt", "w").close()
 
-    s3 = boto3.client('s3')
-    s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', '/tmp/chromedriver')
-    s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', '/tmp/headless-chromium')
+    #s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
+    #s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', '/tmp/chromedriver')
+    #s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', '/tmp/headless-chromium')
 
-    os.chmod("/tmp/chromedriver", 0o777)
-    os.chmod("/tmp/headless-chromium", 0o777)
+    #os.chmod("/tmp/chromedriver", 0o777)
+    #os.chmod("/tmp/headless-chromium", 0o777)
 
     scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                       gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
-    scraper.scrape_all()
-
-    response = {
-        "statusCode": 200,
-        "body": "Selenium Headless Chrome Initialized"
-    }
+    r = scraper.scrape_all()
+    return r
 
 
 if __name__ == "__main__":
-    lambda_handler()
-
+    serve(app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080))))

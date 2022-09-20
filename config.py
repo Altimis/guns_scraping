@@ -13,3 +13,5 @@ wikiarms_url = 'https://www.wikiarms.com/'
 is_proxy = False
 BUCKET_NAME = 'gunsdata'
 threshold = 0.05
+ACCESS_ID = 'AKIAQAHKUCVUHBOE5G4O'
+ACCESS_KEY = '0jwWviFtbJ8FqQXrmfVJGf0R9x8VVfSStux99fAc'
