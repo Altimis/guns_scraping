@@ -747,9 +747,9 @@ class Scraper:
         return new_lst
 
 
-app = Flask(__name__)
+#app = Flask(__name__)
 
-@app.route("/")
+#@app.route("/")
 def main():
     warnings.filterwarnings("ignore")
     # logging.basicConfig(level=self.log_to_file)
@@ -770,4 +770,5 @@ def main():
 
 
 if __name__ == "__main__":
-    serve(app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080))))
+    main()
+    #serve(app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080))))
