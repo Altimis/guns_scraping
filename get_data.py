@@ -540,8 +540,10 @@ class Scraper:
         """
         # intitate the driver instance with options and chrome version
         options = uc.ChromeOptions()
+        options.add_argument('--no-first-run --no-service-autorun')
+        options.add_argument('--headless')
         try:  # will patch to newest Chrome driver version
-            driver = uc.Chrome(options=options)
+            driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options, version_main=105)
         except selenium.common.exceptions.WebDriverException as e:  # newest driver version not matching Chrome version
             del options  # destroy thread-bound ChromeOptions object
             # parse current Chrome version from exception message
@@ -557,7 +559,7 @@ class Scraper:
             options.add_argument('--no-first-run --no-service-autorun')
             options.add_argument('--headless')
             # options.add_argument(f'--proxy={proxy}')
-            driver = uc.Chrome(options=options, version_main=cversion)
+            driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options, version_main=cversion)
         #worked = False
         #attempt = 1
         #while not worked and attempt < 4:
