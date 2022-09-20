@@ -4,8 +4,8 @@ build:
   commands:
     pre-build:
       - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-      - dpkg -i google-chrome-stable_current_amd64.deb
-      - apt-get -fy install
+      - sudo dpkg -i google-chrome-stable_current_amd64.deb
+      - sudo apt-get -fy install
       - wget https://chromedriver.storage.googleapis.com/105.0.5195.52/chromedriver_linux64.zip
       - unzip chromedriver_linux64.zip
       - mv chromedriver tmp/chromedriver
