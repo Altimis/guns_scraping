@@ -1,0 +1,16 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    pre-build:
+      - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      - dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
+    build:
+      - pip install pipenv
+      - pipenv install
+  env:
+    - name: APP_HOME
+      value: "/guns_scraping_aws"
+run:
+  runtime-version: 3.7
+  command: python get_data.py
