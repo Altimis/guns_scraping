@@ -266,7 +266,7 @@ class Scraper:
             err = traceback.format_exc()
             self.log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
                              f"\nError Traceback: {err}")
-            driver.quit()
+            driver.close()
             return
         # sleep(random.uniform(, 6))
 
@@ -279,7 +279,7 @@ class Scraper:
             err = traceback.format_exc()
             self.log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
                              f"\nError Traceback: {e}")
-            driver.quit()
+            driver.close()
             return
         self.log_to_file(f"[{scraper_name}] got {len(els)} elements")
         # iterate through all shops
@@ -312,12 +312,12 @@ class Scraper:
                         sleep(0.5)
                         store_url = driver2.current_url
                         i += 1
-                    driver2.quit()
+                    driver2.close()
                 except Exception as e:
                     err = traceback.format_exc()
                     self.log_to_file(f"[{scraper_name}] There was an issue getting the store href : {store_href}"
                                      f"\nError Traceback: {e}")
-                    driver2.quit()
+                    driver2.close()
                     store_url = store_href
                     pass
 
@@ -363,7 +363,7 @@ class Scraper:
             err = traceback.format_exc()
             self.log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
                              f"\nError Traceback: {err}")
-            driver.quit()
+            driver.close()
             return
         sleep(random.uniform(0.5, 1))
 
@@ -378,11 +378,11 @@ class Scraper:
         if found:
             if int(re.search(r'\d+', found).group()) == 0:
                 self.log_to_file(f"[{scraper_name}] 0 results found for ucp : {ucp}")
-                driver.quit()
+                driver.close()
                 return
         else:
             self.log_to_file(f"[{scraper_name}] 0 results found for ucp : {ucp}")
-            driver.quit()
+            driver.close()
             return
 
         # show all stores
@@ -399,7 +399,7 @@ class Scraper:
             err = traceback.format_exc()
             self.log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
                              f"\nError Traceback: {e}")
-            driver.quit()
+            driver.close()
             return
         # iterate through all shops
         stores_prices = []
@@ -429,19 +429,19 @@ class Scraper:
                         sleep(0.5)
                         store_url = driver2.current_url
                         i += 1
-                    driver2.quit()
+                    driver2.close()
                 except:
                     err = traceback.format_exc()
                     self.log_to_file(f"[{scraper_name}] There was an issue getting the store href : {store_href}"
                                      f"\nError Traceback: {err}")
-                    driver2.quit()
+                    driver2.close()
                     store_url = store_href
                     pass
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
             stores_prices.append((store_url, price))
 
         # close the driver
-        driver.quit()
+        driver.close()
         self.log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
         # save productsUnnamed: 0 for this ucp
         self.upcs_products += stores_prices
@@ -470,7 +470,7 @@ class Scraper:
             err = traceback.format_exc()
             self.log_to_file(f"There was an issue getting the url : {url}"
                              f"\nError Traceback: {err}")
-            driver.quit()
+            driver.close()
             return
         sleep(random.uniform(1, 2))
 
@@ -481,7 +481,7 @@ class Scraper:
             err = traceback.format_exc()
             self.log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
                              f"\nError Traceback: {e}")
-            driver.quit()
+            driver.close()
             return
 
         # iterate through all shops
@@ -514,7 +514,7 @@ class Scraper:
                         sleep(0.5)
                         store_url = driver2.current_url
                         i += 1
-                    driver2.quit()
+                    driver2.close()
                 except:
                     err = traceback.format_exc()
                     self.log_to_file(f"[{scraper_name}] There was an issue getting the store href : {store_href}"
@@ -539,15 +539,20 @@ class Scraper:
         initiate the undetected chrome driver
         """
         # intitate the driver instance with options and chrome version
+        import os
+        print(os.system('whereis google-chrome'))
         try:
             install_path = '/usr/bin/google-chrome'
-            import os
             version = os.popen(f"{install_path} --version").read().strip('Google Chrome ').strip()
             print("version : ", version)
         except Exception as e:
             print("clouldnt get version : ", e)
-        print(os.listdir('tmp'))
+        try:
+            print(os.listdir('tmp'))
+        except:
+            print("nthing")
         options = uc.ChromeOptions()
+        options.binary_location = '/usr/bin/google-chrome'
         options.add_argument('--no-first-run --no-service-autorun')
         options.add_argument('--headless')
         try:  # will patch to newest Chrome driver version
