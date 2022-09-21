@@ -1,26 +1,16 @@
-import logging
 import boto3
-from botocore.exceptions import ClientError
-from flask import Flask
 import re
 import pandas as pd
 import os
 import numpy as np
 import math
-from waitress import serve
-import chromedriver_autoinstaller
 import config
 import undetected_chromedriver as uc
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
 import random
-import logging
 import traceback
-import selenium
 from time import sleep
 
-import itertools
 from threading import Thread
 
 import csv
@@ -32,8 +22,6 @@ from datetime import datetime as dt
 
 import warnings
 
-import os
-import stat
 
 ##########
 # config #
