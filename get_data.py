@@ -89,7 +89,7 @@ class Scraper:
 
     def log_to_file(self, string):
         print(string)
-        with open("/tmp/logs.txt", "a") as f:
+        with open("tmp/logs.txt", "a") as f:
             f.write(string + '/n')
 
     # main function that sends data to the cloud via API
@@ -98,11 +98,11 @@ class Scraper:
 
         # read the file
 
-        s3.download_file(config.BUCKET_NAME, 'layers/timestamps.txt', '/tmp/timestamps.txt')
+        s3.download_file(config.BUCKET_NAME, 'layers/timestamps.txt', 'tmp/timestamps.txt')
 
-        os.chmod('/tmp/timestamps.txt', 0o777)
+        os.chmod('tmp/timestamps.txt', 0o777)
 
-        with open('/tmp/timestamps.txt', 'r') as f:
+        with open('tmp/timestamps.txt', 'r') as f:
             lines = f.readline()
             lines = lines.split('/n')
             lines = [line.rstrip() for line in lines if line]
@@ -112,8 +112,8 @@ class Scraper:
             latest_timestamp = max(timestamps)
             print("latest df : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
             s3.download_file(config.BUCKET_NAME, f"data/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
-                             f"/tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
-            latest_df = pd.read_csv(f"/tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+                             f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+            latest_df = pd.read_csv(f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             target_prices = latest_df.target_price.values.tolist()
             # print("target price : ", target_prices)
             price_difference_percents = latest_df.price_difference_percent.values.tolist()
@@ -136,9 +136,9 @@ class Scraper:
                 print("Completed.")
                 self.log_to_file("All csvs are completed. Creating a new scraping session.")
             now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-            self.ucp_csv_path = f"/tmp/results_{now}.csv"
+            self.ucp_csv_path = f"tmp/results_{now}.csv"
         else:
-            self.ucp_csv_path = f"/tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+            self.ucp_csv_path = f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
             self.log_to_file(f"The file results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv "
                              f"is not completed. Resuming scraping.")
             return
@@ -218,11 +218,11 @@ class Scraper:
                     self.log_to_file(f'Error getting data' + str(response.json()))
 
             # write the time to file
-            with open('/tmp/timestamps.txt', 'a') as f:
+            with open('tmp/timestamps.txt', 'a') as f:
                 f.write(now)
                 f.write('/n')
 
-            bucket.upload_file('/tmp/timestamps.txt', 'layers/timestamps.txt')
+            bucket.upload_file('tmp/timestamps.txt', 'layers/timestamps.txt')
 
         except Exception as e:
             print(e)
@@ -548,12 +548,12 @@ class Scraper:
         except Exception as e:
             print("clouldnt get version : ", e)
         options = uc.ChromeOptions()
-        options.binary_location = '/tmp/headless-chromium'
+        options.binary_location = 'tmp/headless-chromium'
         options.add_argument('--no-first-run --no-service-autorun')
         options.add_argument('--headless')
         try:  # will patch to newest Chrome driver version
             print("getting driver")
-            driver = uc.Chrome(driver_executable_path='/tmp/chromedriver', options=options)
+            driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options)
         except selenium.common.exceptions.WebDriverException as e:  # newest driver version not matching Chrome version
             del options  # destroy thread-bound ChromeOptions object
             # parse current Chrome version from exception message
@@ -569,7 +569,7 @@ class Scraper:
             options.add_argument('--no-first-run --no-service-autorun')
             options.add_argument('--headless')
             # options.add_argument(f'--proxy={proxy}')
-            driver = uc.Chrome(driver_executable_path='/tmp/chromedriver', options=options, version_main=cversion)
+            driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options, version_main=cversion)
         #worked = False
         #attempt = 1
         #while not worked and attempt < 4:
@@ -579,7 +579,7 @@ class Scraper:
             try:
                 chromedriver_path = chromedriver_autoinstaller.install()
                 options = uc.ChromeOptions()
-                #options.binary_location = '/tmp/headless-chromium'
+                #options.binary_location = 'tmp/headless-chromium'
                 options.add_argument('--headless')
                 options.add_argument('--no-sandbox')
                 options.add_argument('--single-process')
@@ -588,14 +588,14 @@ class Scraper:
                 if config.is_proxy:
                     proxy = random.choice(config.proxies)
                     options.add_argument(f'--proxy={proxy}')
-                driver = uc.Chrome(driver_executable_path='/tmp/chromedriver',
+                driver = uc.Chrome(driver_executable_path='tmp/chromedriver',
                                    options=options)  # , version_main=chrome_version)
                 worked = True
                 return driver
             except Exception as e:
                 self.log_to_file("Exception getting the driver : " + str(e))
                 options = uc.ChromeOptions()
-                options.binary_location = '/tmp/headless-chromium'
+                options.binary_location = 'tmp/headless-chromium'
                 options.add_argument('--headless')
                 options.add_argument('--no-sandbox')
                 options.add_argument('--single-process')
@@ -604,7 +604,7 @@ class Scraper:
                 if config.is_proxy:
                     proxy = random.choice(config.proxies)
                     options.add_argument(f'--proxy={proxy}')
-                driver = uc.Chrome(driver_executable_path='/tmp/chromedriver', options=options)
+                driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options)
                 worked = False
             attempt += 1
             """
@@ -675,11 +675,11 @@ class Scraper:
 
                 json_upcs_products[upc.replace("'", '')] = [l for l in upcs_products]
 
-                with open(f"/tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
+                with open(f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
                           'w') as outfile:
                     json.dump(json_upcs_products, outfile)
 
-                bucket.upload_file(f"/tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
+                bucket.upload_file(f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
                                    f"data/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json")
 
                 # print("len : ", len(upcs_products))
@@ -743,7 +743,7 @@ class Scraper:
                 self.log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
 
-            bucket.upload_file("/tmp/logs.txt", "data/logs.txt")
+            bucket.upload_file("tmp/logs.txt", "data/logs.txt")
 
             return upcs_products
 
@@ -766,17 +766,17 @@ def main():
     warnings.filterwarnings("ignore")
     # logging.basicConfig(level=self.log_to_file)
 
-    open("/tmp/logs.txt", "w").close()
+    open("tmp/logs.txt", "w").close()
     print("downloading chromedriver")
     s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
-    s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', '/tmp/chromedriver')
-    s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', '/tmp/headless-chromium')
+    s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', 'tmp/chromedriver')
+    s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', 'tmp/headless-chromium')
     try:
         print(os.listdir('tmp'))
     except:
         print("nthing tmp")
-    os.chmod("/tmp/chromedriver", 0o777)
-    os.chmod("/tmp/headless-chromium", 0o777)
+    os.chmod("tmp/chromedriver", 0o777)
+    os.chmod("tmp/headless-chromium", 0o777)
 
     scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                       gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
