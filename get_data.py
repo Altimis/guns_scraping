@@ -549,7 +549,8 @@ class Scraper:
             print("getting driver")
             driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options)
         except Exception as e:  # newest driver version not matching Chrome version
-            print("couldn't get driver : ", e)
+            err = traceback.format_exc()
+            print("couldn't get driver : ", err)
         #worked = False
         #attempt = 1
         #while not worked and attempt < 4:
