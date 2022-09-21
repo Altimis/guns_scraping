@@ -540,24 +540,20 @@ class Scraper:
         """
         # intitate the driver instance with options and chrome version
         import os
-        print(os.system('whereis google-chrome'))
+        #print(os.system('whereis google-chrome'))
         try:
             install_path = '/usr/bin/google-chrome'
             version = os.popen(f"{install_path} --version").read().strip('Google Chrome ').strip()
             print("version : ", version)
         except Exception as e:
             print("clouldnt get version : ", e)
-        try:
-            print(os.listdir('tmp'))
-        except:
-            print("nthing")
         options = uc.ChromeOptions()
-        options.binary_location = '/usr/bin/google-chrome'
+        options.binary_location = '/tmp/headless-chromium'
         options.add_argument('--no-first-run --no-service-autorun')
         options.add_argument('--headless')
         try:  # will patch to newest Chrome driver version
             print("getting driver")
-            driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options, version_main=105)
+            driver = uc.Chrome(driver_executable_path='/tmp/chromedriver', options=options)
         except selenium.common.exceptions.WebDriverException as e:  # newest driver version not matching Chrome version
             del options  # destroy thread-bound ChromeOptions object
             # parse current Chrome version from exception message
@@ -573,7 +569,7 @@ class Scraper:
             options.add_argument('--no-first-run --no-service-autorun')
             options.add_argument('--headless')
             # options.add_argument(f'--proxy={proxy}')
-            driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options, version_main=cversion)
+            driver = uc.Chrome(driver_executable_path='/tmp/chromedriver', options=options, version_main=cversion)
         #worked = False
         #attempt = 1
         #while not worked and attempt < 4:
@@ -771,13 +767,16 @@ def main():
     # logging.basicConfig(level=self.log_to_file)
 
     open("/tmp/logs.txt", "w").close()
-
-    #s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
-    #s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', '/tmp/chromedriver')
-    #s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', '/tmp/headless-chromium')
-
-    #os.chmod("/tmp/chromedriver", 0o777)
-    #os.chmod("/tmp/headless-chromium", 0o777)
+    print("downloading chromedriver")
+    s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
+    s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', '/tmp/chromedriver')
+    s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', '/tmp/headless-chromium')
+    try:
+        print(os.listdir('tmp'))
+    except:
+        print("nthing tmp")
+    os.chmod("/tmp/chromedriver", 0o777)
+    os.chmod("/tmp/headless-chromium", 0o777)
 
     scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                       gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
