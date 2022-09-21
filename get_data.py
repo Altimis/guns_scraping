@@ -543,15 +543,15 @@ class Scraper:
             install_path = '/usr/bin/google-chrome'
             import os
             version = os.popen(f"{install_path} --version").read().strip('Google Chrome ').strip()
+            print("version : ", version)
         except Exception as e:
             print("clouldnt get version : ", e)
-        print(version)
+        print(os.listdir('tmp'))
         options = uc.ChromeOptions()
         options.add_argument('--no-first-run --no-service-autorun')
         options.add_argument('--headless')
         try:  # will patch to newest Chrome driver version
             print("getting driver")
-
             driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options, version_main=105)
         except selenium.common.exceptions.WebDriverException as e:  # newest driver version not matching Chrome version
             del options  # destroy thread-bound ChromeOptions object
