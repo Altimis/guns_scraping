@@ -729,8 +729,8 @@ class Scraper:
 
 
 #app = Flask(__name__)
-
-#@app.route("/")
+# nth
+#@app.route("/" )
 def main():
     warnings.filterwarnings("ignore")
     # logging.basicConfig(level=self.log_to_file)
