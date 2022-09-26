@@ -1,6 +1,6 @@
-#FROM python:3.7
+FROM python:3.8
 #FROM public.ecr.aws/amazonlinux/amazonlinux:2
-FROM amd64/python:3.7
+#FROM amd64/python:3.7
 
 #FROM public.ecr.aws/amazonlinux/amazonlinux:latest
 
@@ -10,25 +10,6 @@ ENV PATH=/usr/local/bin:$PATH \
     WEB_CONCURRENCY=2
 
 # Needed libraries
-RUN yum update -y \
-    && amazon-linux-extras enable python3.8 \
-    && yum groupinstall -y "Development tools" \
-    && yum install -y \
-	       python38-devel \
-           pycairo \
-           python38 \
-           libffi-devel \
-           wget \
-           sudo \
-           #lsb \
-           #libXScrnSaver \
-    && python3.8 -m pip install pip --upgrade \
-    && ln -s /usr/local/bin/pip3 /usr/bin/pip3 \
-    && ln -s /usr/bin/pydoc3.8 /usr/local/bin/pydoc \
-    && ln -s /usr/bin/python3.8 /usr/local/bin/python \
-    && ln -s /usr/bin/python3.8-config /usr/local/bin/python-config \
-    && yum -y clean all --enablerepo='*' \
-    && rm -rf /var/cache/yum
 #RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apt-utils
 #RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 #RUN yum install -y gconf-service
@@ -69,8 +50,35 @@ RUN pip install undetected_chromedriver
 #RUN google-chrome --version
 
 #RUN yum install wget
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
-RUN sudo yum install -y ./google-chrome-stable_current_x86_64.rpm
+#RUN apt-get update -y
+#RUN apt-get install -y unzip xvfb libxi6 libgconf-2-4
+#RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+#RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+#RUN dpkg -i google-chrome-stable_current_amd64.deb
+#RUN apt-get -f install
+#RUN apt-get install -y ./google-chrome-stable_current_x86_64.rpm
+
+
+# Adding trusting keys to apt for repositories
+
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+
+
+# Adding Google Chrome to the repositories
+
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+
+
+# Updating apt to see and install Google Chrome
+
+RUN apt-get -y update
+
+
+# Magic happens
+
+RUN apt-get install -y google-chrome-stable
+RUN google-chrome-stable --version
+
 
 
 # install google chrome
@@ -82,7 +90,7 @@ RUN sudo yum install -y ./google-chrome-stable_current_x86_64.rpm
 #RUN curl https://intoli.com/install-google-chrome.sh | bash
 
 # install chromedriver
-RUN yum install -yqq unzip
+RUN apt-get install -yqq unzip
 RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
 RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
