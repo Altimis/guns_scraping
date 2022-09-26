@@ -1,0 +1,17 @@
+user_agent = ''
+token = "BBFF-9WF3RcoEaPSlKpxA0OL3iEUflkwTAk"
+url = "https://app.ammoreadycloud.com/api/v2/catalog"
+username = "22070587344825"
+password = "rR0akovE9ooliDbq6LJXqifGPuRCqnLxytxtUBOf"
+proxies = ['165.232.90.87']
+#proxies = ['81.200.123.74']
+#proxies = ['173.212.200.30']
+barcodelookup_url = 'https://www.barcodelookup.com/'
+gunengine_url = 'https://www.gunengine.com/'
+gundeals_url = 'https://gun.deals/search/apachesolr_search/'
+wikiarms_url = 'https://www.wikiarms.com/'
+is_proxy = False
+BUCKET_NAME = 'gunsdata'
+threshold = 0.05
+ACCESS_ID = 'AKIAQAHKUCVUHBOE5G4O'
+ACCESS_KEY = '0jwWviFtbJ8FqQXrmfVJGf0R9x8VVfSStux99fAc'

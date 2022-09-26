@@ -22,6 +22,9 @@ from datetime import datetime as dt
 
 import warnings
 
+from flask import Flask
+from waitress import serve
+
 
 ##########
 # config #
@@ -184,7 +187,7 @@ class Scraper:
                     df['price_difference_percent'] = ''
                     df['price_difference_amount'] = ''
 
-                    df = df.sample(frac=0.13)
+                    df = df.sample(frac=0.25)
 
                     # print(self.ucp_csv_path)
 
@@ -272,7 +275,8 @@ class Scraper:
         self.log_to_file(f"[{scraper_name}] got {len(els)} elements")
         # iterate through all shops
         stores_prices = []
-        for el in els:
+        for j, el in enumerate(els):
+            print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             try:
                 store_href = el.find_element(By.XPATH, "./td[1]/a").get_attribute('href')
@@ -294,12 +298,15 @@ class Scraper:
             else:
                 try:
                     driver2.get(store_href)
-                    store_url = store_href
+                    #store_url = store_href
+                    store_url = driver2.current_url
                     i = 0
-                    while store_url == store_href and i < 5:
+                    """
+                    while store_url == store_href and i < 2:
                         sleep(0.5)
                         store_url = driver2.current_url
                         i += 1
+                    """
                     driver2.close()
                 except Exception as e:
                     err = traceback.format_exc()
@@ -391,7 +398,8 @@ class Scraper:
             return
         # iterate through all shops
         stores_prices = []
-        for variant_el in variant_els:
+        for j, variant_el in enumerate(variant_els):
+            print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             try:
                 price = float(variant_el.find_element(
@@ -411,12 +419,15 @@ class Scraper:
             else:
                 try:
                     driver2.get(store_href)
-                    store_url = store_href
+                    #store_url = store_href
+                    store_url = driver2.current_url
                     i = 0
-                    while store_url == store_href and i < 5:
+                    """
+                    while store_url == store_href and i < 2:
                         sleep(0.5)
                         store_url = driver2.current_url
                         i += 1
+                    """
                     driver2.close()
                 except:
                     err = traceback.format_exc()
@@ -474,7 +485,8 @@ class Scraper:
 
         # iterate through all shops
         stores_prices = []
-        for el in els:
+        for j, el in enumerate(els):
+            print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             if 'out of stock' in el.text.lower():
                 self.log_to_file(f"[{scraper_name}] out of stock found")
@@ -496,12 +508,15 @@ class Scraper:
             else:
                 try:
                     driver2.get(store_href)
-                    store_url = store_href
+                    #store_url = store_href
+                    store_url = driver2.current_url
                     i = 0
-                    while store_url == store_href and i < 5:
+                    """
+                    while store_url == store_href and i < 2:
                         sleep(0.5)
                         store_url = driver2.current_url
                         i += 1
+                    """
                     driver2.close()
                 except:
                     err = traceback.format_exc()
@@ -528,55 +543,22 @@ class Scraper:
         """
         # intitate the driver instance with options and chrome version
         import os
-        #print(os.system('whereis google-chrome'))
         options = uc.ChromeOptions()
         #options.binary_location = 'tmp/headless-chromium'
-        #options.add_argument('--no-first-run --no-service-autorun')
+        options.add_argument('--no-first-run --no-service-autorun')
         options.add_argument('--headless')
+        options.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
+        options.add_argument("--disable-dev-shm-usage")
+        chrome_prefs = {}
+        options.experimental_options["prefs"] = chrome_prefs
+        chrome_prefs["profile.default_content_settings"] = {"images": 2}
         try:  # will patch to newest Chrome driver version
-            print("getting driver")
+            #print("getting driver")
             driver = uc.Chrome(options=options)
         except Exception as e:  # newest driver version not matching Chrome version
             err = traceback.format_exc()
             print("couldn't get driver : ", err)
-        #worked = False
-        #attempt = 1
-        #while not worked and attempt < 4:
-            # self.log_to_file(f"initiating the driver attempt {attempt} ...")
 
-            """
-            try:
-                chromedriver_path = chromedriver_autoinstaller.install()
-                options = uc.ChromeOptions()
-                #options.binary_location = 'tmp/headless-chromium'
-                options.add_argument('--headless')
-                options.add_argument('--no-sandbox')
-                options.add_argument('--single-process')
-                options.add_argument('--disable-dev-shm-usage')
-                # set proxy
-                if config.is_proxy:
-                    proxy = random.choice(config.proxies)
-                    options.add_argument(f'--proxy={proxy}')
-                driver = uc.Chrome(driver_executable_path='tmp/chromedriver',
-                                   options=options)  # , version_main=chrome_version)
-                worked = True
-                return driver
-            except Exception as e:
-                self.log_to_file("Exception getting the driver : " + str(e))
-                options = uc.ChromeOptions()
-                options.binary_location = 'tmp/headless-chromium'
-                options.add_argument('--headless')
-                options.add_argument('--no-sandbox')
-                options.add_argument('--single-process')
-                options.add_argument('--disable-dev-shm-usage')
-                # set proxy
-                if config.is_proxy:
-                    proxy = random.choice(config.proxies)
-                    options.add_argument(f'--proxy={proxy}')
-                driver = uc.Chrome(driver_executable_path='tmp/chromedriver', options=options)
-                worked = False
-            attempt += 1
-            """
         return driver
 
     def load_ucps(self, ucp_csv_path):
@@ -623,14 +605,14 @@ class Scraper:
             self.log_to_file("Scraping 3 websites started")
             # self.scrape_gundeals(ucp = upc)
             try:
-                #t1 = Thread(target=self.scrape_gundeals, args=(upc,))
-                #t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
+                t1 = Thread(target=self.scrape_gundeals, args=(upc,))
+                t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
                 t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
-                #t1.start()
-                #t2.start()
+                t1.start()
+                t2.start()
                 t3.start()
-                #t1.join()
-                #t2.join()
+                t1.join()
+                t2.join()
                 t3.join()
                 # self.scrape_barcodelookup(upc)
 
@@ -728,22 +710,18 @@ class Scraper:
         return new_lst
 
 
-#app = Flask(__name__)
+app = Flask(__name__)
 # nth
-#@app.route("/" )
+@app.route("/")
 def main():
     warnings.filterwarnings("ignore")
     # logging.basicConfig(level=self.log_to_file)
 
     open("tmp/logs.txt", "w").close()
-    print("downloading chromedriver")
+    #print("downloading chromedriver")
     #s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
     #s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', 'tmp/chromedriver')
     #s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', 'tmp/headless-chromium')
-    try:
-        print(os.listdir('tmp'))
-    except:
-        print("nthing tmp")
     #os.chmod("tmp/chromedriver", 0o777)
     #os.chmod("tmp/headless-chromium", 0o777)
 
@@ -755,4 +733,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #serve(app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080))))
+    #serve(app.run(threaded=True, debug=True, host="0.0.0.0", port=8080))

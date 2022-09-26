@@ -4,5 +4,5 @@ requests
 selenium
 undetected_chromedriver
 boto3
-waitress
 flask
+waitress
